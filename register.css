@@ -1,6 +1,6 @@
 * {
     box-sizing: border-box;
-    margin: 20;
+    margin: 00;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -11,7 +11,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 300vh;
     padding: 20px;
 }
 
