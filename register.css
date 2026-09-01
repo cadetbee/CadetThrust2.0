@@ -11,7 +11,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 300vh;
+    min-height: 100vh;
     padding: 20px;
 }
 
@@ -25,7 +25,8 @@ h1 {
     font-size: 28px;
     font-weight: 700;
     color: #000000;
-    margin-bottom: 5px;
+    margin-top : 10px
+    margin-bottom: 10px;
 }
 
 .tagline {
