@@ -1,0 +1,283 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadet Thurst - Register</title>
+    <!-- CSS File Link -->
+    <link rel="stylesheet" href="register.css">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Cadet Thurst</h1>
+    <p class="tagline">An unofficial website of Sylhet Cadet College</p>
+
+    <!-- Register Form -->
+    <form id="registerForm">
+        <div class="form-group">
+            <label for="regAccountName">Account Name</label>
+            <input type="text" id="regAccountName" minlength="4" maxlength="16" placeholder="Enter account name" required>
+        </div>
+        <div class="form-group">
+            <label for="regEmail">Email Address</label>
+            <input type="email" id="regEmail" placeholder="Enter email address" required>
+        </div>
+        <div class="form-group">
+            <label for="regCadetName">Cadet Name</label>
+            <input type="text" id="regCadetName" minlength="2" maxlength="16" placeholder="Enter cadet name" required>
+        </div>
+        <div class="form-group">
+            <label for="regCadetNo">Cadet No. </label>
+            <input type="text" id="regCadetNo" pattern="\d{4}" title="Must be 4 digits" placeholder="Enter your cadet no." required>
+        </div>
+        <div class="form-group">
+            <label for="regHouse">House Name</label>
+            <select id="regHouse" required>
+                <option value="">Select House</option>
+                <option value="Titumir">Titumir House</option>
+                <option value="Surma">Surma House</option>
+                <option value="Shahjalal">Shahjalal House</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="regBatch">Batch</label>
+            <select id="regBatch" required>
+                <option value="">Select Batch</option>
+                <option value="Intake 51">Intake 51</option>
+                <option value="Intake 50">Intake 50</option>
+                <option value="Intake 49">Intake 49</option>
+                <option value="Intake 48">Intake 48</option>
+                <option value="Intake 46">Intake 46</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="regPassword">Password </label>
+            <input type="password" id="regPassword" maxlength="6" placeholder="Enter 6-digit password" required>
+            
+            <!-- Dynamic Password Strength Container -->
+            <div class="strength-container" id="strengthContainer">
+                <div class="strength-bar-bg">
+                    <div class="strength-bar-fill" id="strengthBarFill"></div>
+                </div>
+                <div class="strength-text" id="strengthText"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="regConfirmPassword">Confirm Password</label>
+            <input type="password" id="regConfirmPassword" maxlength="6" placeholder="Confirm password" required>
+        </div>
+        
+        <button type="submit" class="btn" id="regBtn">Register</button>
+        <div class="loader" id="regLoader"></div>
+        
+        <p class="toggle-text">
+            Already have an account? <a href="index.html">Log in</a>
+        </p>
+    </form>
+</div>
+
+<!-- Custom Universal Alert Popup -->
+<div class="modal-overlay" id="customAlertModal">
+    <div class="modal-box">
+        <div class="modal-icon">⚠️</div>
+        <div class="modal-message" id="modalAlertMessage">Warning message here</div>
+        <button class="modal-btn" onclick="closeCustomAlert()">OK</button>
+    </div>
+</div>
+
+<!-- Custom Success Popup -->
+<div class="modal-overlay" id="customSuccessModal">
+    <div class="modal-box">
+        <svg class="checkmark-svg" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="25" fill="#4CAF50"/>
+            <path fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M14 27 l7 7 l17 -17"/>
+        </svg>
+        <div class="modal-title">Account Created Successfully !</div>
+        <button class="modal-btn" style="margin-top: 15px;" onclick="goToLogin()">Next</button>
+    </div>
+</div>
+
+<script>
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://xoxzqaisapuhknqbdbqc.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'sb_publishable_bWKAvlmISCKe9X19IeMHCg_yazPa2at';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const regLoader = document.getElementById('regLoader');
+    const regPasswordInput = document.getElementById('regPassword');
+    const strengthContainer = document.getElementById('strengthContainer');
+    const strengthBarFill = document.getElementById('strengthBarFill');
+    const strengthText = document.getElementById('strengthText');
+
+    let currentPasswordStatus = '';
+    let currentWarningMsg = '';
+
+    // Pop-up functions
+    function showPopupAlert(msg) {
+        document.getElementById('modalAlertMessage').innerText = msg;
+        document.getElementById('customAlertModal').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+        document.getElementById('customAlertModal').style.display = 'none';
+    }
+
+    function showSuccessPopup() {
+        document.getElementById('customSuccessModal').style.display = 'flex';
+    }
+
+    function goToLogin() {
+        window.location.href = 'index.html';
+    }
+
+    // Dynamic Password Checking Logic
+    regPasswordInput.addEventListener('input', () => {
+        const val = regPasswordInput.value;
+
+        if (!val) {
+            strengthContainer.style.display = 'none';
+            currentPasswordStatus = '';
+            currentWarningMsg = '';
+            return;
+        }
+
+        strengthContainer.style.display = 'block';
+
+        const isAllSameDigits = /^(\d)\1+$/.test(val);
+
+        // ১. যদি পাসওয়ার্ড ৬ ডিজিটের কম হয় -> লাল রঙ
+        if (val.length < 6) {
+            setStrengthUI('33.33%', '#f44336', 'Password must be 6 digits!', 'length_error', 'Password must be 6 digits!');
+        }
+        // ২. যদি পাসওয়ার্ড অতি সহজ হয় -> লাল রঙ
+        else if (val === '123456' || val === '654321' || isAllSameDigits) {
+            setStrengthUI('33.33%', '#f44336', 'This password is too easy!', 'easy', 'This password is too easy!');
+        }
+        // ৩. মাঝারি পাসওয়ার্ড -> কমলা রঙ
+        else if (val === '13579' || val === '97531') {
+            setStrengthUI('66.66%', '#ff9800', 'Try more hard passwords !', 'medium', 'Try more hard passwords !');
+        }
+        // ৪. উপযুক্ত পাসওয়ার্ড -> সবুজ রঙ
+        else {
+            setStrengthUI('100%', '#4CAF50', 'This password is suitable!', 'suitable', '');
+        }
+    });
+
+    function setStrengthUI(width, color, text, status, warningMsg) {
+        strengthBarFill.style.width = width;
+        strengthBarFill.style.backgroundColor = color;
+        strengthText.style.color = color;
+        strengthText.innerText = text;
+        currentPasswordStatus = status;
+        currentWarningMsg = warningMsg;
+    }
+
+    // Register Form Submit Logic
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const accountName = document.getElementById('regAccountName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const cadetName = document.getElementById('regCadetName').value.trim();
+        const cadetNo = document.getElementById('regCadetNo').value.trim();
+        const house = document.getElementById('regHouse').value;
+        const batch = document.getElementById('regBatch').value;
+        const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+        // পাসওয়ার্ড কনফার্মেশন চেক
+        if (password !== confirmPassword) {
+            showPopupAlert("Passwords do not match!");
+            return;
+        }
+
+        // পাসওয়ার্ড সবুজ না থাকলে উপযুক্ত ওয়ার্নিং পপআপ প্রদর্শন
+        if (currentPasswordStatus !== 'suitable') {
+            showPopupAlert(currentWarningMsg || "Please set a suitable 6-digit password!");
+            return;
+        }
+
+        regLoader.style.display = 'block';
+
+        try {
+            // ১. ডাটাবেজে আগে চেক করা: একই Account Name দিয়ে আগে কোনো অ্যাকাউন্ট খোলা আছে কিনা
+            const { data: existingUser, error: checkError } = await supabaseClient
+                .from('auth_users')
+                .select('account_name')
+                .eq('account_name', accountName)
+                .maybeSingle();
+
+            if (checkError) {
+                regLoader.style.display = 'none';
+                showPopupAlert("Database connection error. Try again.");
+                return;
+            }
+
+            if (existingUser) {
+                regLoader.style.display = 'none';
+                showPopupAlert("Account name already exists! Please choose another.");
+                return;
+            }
+
+            // ২. Supabase Auth-এ সাইন আপ
+            const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if (authError) {
+                regLoader.style.display = 'none';
+                showPopupAlert(authError.message);
+                return;
+            }
+
+            const userId = authData.user ? authData.user.id : null;
+
+            // ৩. auth_users টেবিলে ইনসার্ট
+            const { error: customUserError } = await supabaseClient
+                .from('auth_users')
+                .insert([
+                    {
+                        account_name: accountName,
+                        email: email,
+                        cadet_name: cadetName,
+                        cadet_number: cadetNo,
+                        house: house,
+                        approved: true
+                    }
+                ]);
+
+            if (customUserError) {
+                regLoader.style.display = 'none';
+                showPopupAlert(customUserError.message);
+                return;
+            }
+
+            // ৪. cadet_profiles টেবিলে প্রোফাইল তৈরি
+            if (userId) {
+                await supabaseClient
+                    .from('cadet_profiles')
+                    .insert([
+                        {
+                            user_id: userId,
+                            batch: batch
+                        }
+                    ]);
+            }
+
+            regLoader.style.display = 'none';
+            showSuccessPopup();
+
+        } catch (err) {
+            regLoader.style.display = 'none';
+            showPopupAlert("Registration failed. Try again.");
+        }
+    });
+</script>
+
+</body>
+</html>
